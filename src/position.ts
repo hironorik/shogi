@@ -21,8 +21,8 @@ export class Position {
 	private static readonly whiteKingPieceId = 21;
 
 	constructor() {
-		const initialPiece: any = yaml.safeLoad(fs.readFileSync('./config/initialPiece.yaml', 'utf8'));
-		const pieceKind: any = yaml.safeLoad(fs.readFileSync('./config/pieceKind.yaml', 'utf8'));
+		const initialPiece: any = yaml.safeLoad(fs.readFileSync(`${__dirname}/../config/initialPiece.yaml`, 'utf8'));
+		const pieceKind: any = yaml.safeLoad(fs.readFileSync(`${__dirname}/../config/pieceKind.yaml`, 'utf8'));
 
 		this.pieces = initialPiece.map((piece: any, idx: number) => {
 			return new Piece(
@@ -118,12 +118,16 @@ export class Position {
 		// 王の行動可能なマスに移動した場合、相手のコマに王が取られるか判定
 		return kingMovableAddresses.some((movableAddress: Address) => {
 			let tmpPosition = Object.create(this);
+			tmpPosition.pieces = tmpPosition.pieces.map((piece: Piece) => {
+				return Object.create(piece);
+			});
 
 			try {
 				tmpPosition.move(kingPiece.id, movableAddress);
 			} catch (e) {
 				return false;
 			}
+
 			return tmpPosition.canTakeKing();
 		});
 	}
@@ -131,8 +135,10 @@ export class Position {
 	private willBeCheckmate(piece: Piece, address: Address): boolean {
 		const tmpAddress = piece.address;
 		piece.setAddress(address);
+		this.changePlayerSide();
 		const isCheckmate = this.isCheckmate();
 		piece.setAddress(tmpAddress);
+		this.changePlayerSide();
 
 		return isCheckmate;
 	}
