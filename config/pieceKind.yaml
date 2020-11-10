@@ -1,0 +1,286 @@
+k:
+  name:
+    normal:
+      full:
+        ja: 王
+        en: King
+      short:
+        ja: 王
+        en: K
+  point: 100
+  move:
+    normal:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 1
+        y: 1
+      - x: 0
+        y: 1
+      - x: -1
+        y: 1
+r:
+  name:
+    normal:
+      full:
+        ja: 飛車
+        en: Rock
+      short:
+        ja: 飛
+        en: R
+    promoted:
+      full:
+        ja: 成飛
+        en: Promoted Rock
+      short:
+        ja: 龍
+        en: PR
+  point: 100
+  move:
+    normal:
+      - x: 0
+        y: -n
+      - x: n
+        y: 0
+      - x: -n
+        y: 0
+      - x: 0
+        y: n
+    promoted:
+      - x: 0
+        y: -n
+      - x: n
+        y: 0
+      - x: -n
+        y: 0
+      - x: 0
+        y: n
+      - x: 1
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 1
+      - x: -1
+        y: 1
+b:
+  name:
+    normal:
+      full:
+        ja: 角
+        en: Bishop
+      short:
+        ja: 角
+        en: B
+    promoted:
+      full:
+        ja: 成角
+        en: Promoted Bishop
+      short:
+        ja: 馬
+        en: PB
+  point: 100
+  move:
+    normal:
+      - x: n
+        y: -n
+      - x: -n
+        y: -n
+      - x: n
+        y: n
+      - x: -n
+        y: n
+    promoted:
+      - x: n
+        y: -n
+      - x: -n
+        y: -n
+      - x: n
+        y: n
+      - x: -n
+        y: n
+      - x: 0
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
+g:
+  name:
+    normal:
+      full:
+        ja: 金
+        en: Gold
+      short:
+        ja: 金
+        en: G
+  point: 100
+  move:
+    normal:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
+s:
+  name:
+    normal:
+      full:
+        ja: 銀
+        en: Silver
+      short:
+        ja: 銀
+        en: S
+    promoted:
+      full:
+        ja: 成銀
+        en: Promoted Silver
+      short:
+        ja: 全
+        en: PS
+  point: 100
+  move:
+    normal:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 1
+      - x: -1
+        y: 1
+    promoted:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
+n:
+  name:
+    normal:
+      full:
+        ja: 桂馬
+        en: Knight
+      short:
+        ja: 桂
+        en: N
+    promoted:
+      full:
+        ja: 成桂
+        en: Promoted Knight
+      short:
+        ja: 圭
+        en: PN
+  point: 100
+  move:
+    normal:
+      - x: 1
+        y: -2
+      - x: -1
+        y: -2
+    promoted:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
+l:
+  name:
+    normal:
+      full:
+        ja: 香車
+        en: Lance
+      short:
+        ja: 香
+        en: L
+    promoted:
+      full:
+        ja: 成香
+        en: Promoted Lance
+      short:
+        ja: 杏
+        en: PL
+  point: 100
+  move:
+    normal:
+      - x: 0
+        y: -n
+    promoted:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
+p:
+  name:
+    normal:
+      full:
+        ja: 歩
+        en: Pawn
+      short:
+        ja: 歩
+        en: P
+    promoted:
+      full:
+        ja: 成歩
+        en: Promoted Pawn
+      short:
+        ja: と
+        en: PP
+  point: 100
+  move:
+    normal:
+      - x: 0
+        y: -1
+    promoted:
+      - x: 1
+        y: -1
+      - x: 0
+        y: -1
+      - x: -1
+        y: -1
+      - x: 1
+        y: 0
+      - x: -1
+        y: 0
+      - x: 0
+        y: 1
