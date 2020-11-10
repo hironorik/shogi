@@ -52,42 +52,70 @@ export class Position {
 		});
 	}
 
+	private getEmptyAddresses(): Address[] {
+		let emptyAddresses = [];
+		for (let x=1; x<=9; x++) {
+			for (let y=1; y<=9; y++) {
+				emptyAddresses.push({
+					x: x,
+					y: y,
+				});
+			}
+		}
+		return emptyAddresses.filter((address: Address) => {
+			return !this.findPieceByAddress(address);
+		});
+	}
+
 	public getPieceMovableAddresses(piece: Piece): Address[] {
 		let movableAddress: Address[] = [];
 	
-		piece.moves.forEach((move: MoveAddress) => {
-			if (Piece.isFuncutionalMoveDimension(move.x) || Piece.isFuncutionalMoveDimension(move.y)) {
-				for (let i=1; i<9; i++) {
-					let moveX = Piece.isFuncutionalMoveDimension(move.x) ? parseInt((move.x as string).replace('n', i.toString())) : move.x as number;
-					let moveY = Piece.isFuncutionalMoveDimension(move.y) ? parseInt((move.y as string).replace('n', i.toString())) : move.y as number;
-					moveY = piece.side == PlayerSide.white ? -1 * moveY : moveY;
-	
-					let potentialAddress = {
-						'x': (piece.address as Address).x + moveX,
-						'y': (piece.address as Address).y + moveY,
-					}
-	
-					let addressPiece = this.findPieceByAddress(potentialAddress);
-					if (addressPiece || !Position.isAddressInsideBoard(potentialAddress)) {
-						break;
-					} else if (addressPiece && (addressPiece as Piece).side !== piece.side) {
+		// 持ち駒の場合
+		if (piece.address === undefined) {
+			const emptyAddresses = this.getEmptyAddresses();
+			movableAddress = emptyAddresses.filter((address: Address) => {
+				return this.WillPieceBeMovable(piece, address) && 
+					!(piece.kind === 'p' && this.willBeCheckmate(piece, address)) &&
+					!this.willBeTwoPawns(piece, address);
+			});
+
+		// 盤上の駒の場合
+		} else {
+			piece.moves.forEach((move: MoveAddress) => {
+				// 縦横斜めに連続する箇所に移動可能な駒の場合
+				if (Piece.isFuncutionalMoveDimension(move.x) || Piece.isFuncutionalMoveDimension(move.y)) {
+					for (let i=1; i<9; i++) {
+						let moveX = Piece.isFuncutionalMoveDimension(move.x) ? parseInt((move.x as string).replace('n', i.toString())) : move.x as number;
+						let moveY = Piece.isFuncutionalMoveDimension(move.y) ? parseInt((move.y as string).replace('n', i.toString())) : move.y as number;
+						moveY = piece.side == PlayerSide.white ? -1 * moveY : moveY;
+
+						let potentialAddress = {
+							'x': (piece.address as Address).x + moveX,
+							'y': (piece.address as Address).y + moveY,
+						}
+
+						let addressPiece = this.findPieceByAddress(potentialAddress);
+						if ((addressPiece && (addressPiece as Piece).side === piece.side) || !Position.isAddressInsideBoard(potentialAddress)) {
+							break;
+						} else if (addressPiece && (addressPiece as Piece).side !== piece.side) {
+							movableAddress.push(potentialAddress);
+							break;
+						}
 						movableAddress.push(potentialAddress);
-						break;
 					}
-					movableAddress.push(potentialAddress);
+				} else {
+					let moveY = piece.side == PlayerSide.white ? -1 * (move.y as number) : move.y as number;
+					let potentialAddress = {
+						'x': (piece.address as Address).x + (move.x as number),
+						'y': (piece.address as Address).y + moveY,
+					};
+					let addressPiece = this.findPieceByAddress(potentialAddress);
+					if ((!addressPiece || (addressPiece && (addressPiece as Piece).side !== piece.side)) && Position.isAddressInsideBoard(potentialAddress)) {
+						movableAddress.push(potentialAddress);
+					}
 				}
-			} else {
-				let moveY = piece.side == PlayerSide.white ? -1 * (move.y as number) : move.y as number;
-				let potentialAddress = {
-					'x': (piece.address as Address).x + (move.x as number),
-					'y': (piece.address as Address).y + moveY,
-				};
-				let addressPiece = this.findPieceByAddress(potentialAddress);
-				if ((!addressPiece || (addressPiece && (addressPiece as Piece).side !== piece.side)) && Position.isAddressInsideBoard(potentialAddress)) {
-					movableAddress.push(potentialAddress);
-				}
-			}
-		});
+			});
+		}
 	
 		return movableAddress;
 	}
@@ -132,6 +160,14 @@ export class Position {
 		});
 	}
 
+	private WillPieceBeMovable(piece: Piece, address: Address): boolean {
+		const tmpAddress = piece.address;
+		piece.setAddress(address);
+		const tmpMovableAddresses = this.getPieceMovableAddresses(piece);
+		piece.setAddress(tmpAddress);
+		return tmpMovableAddresses.length > 0;
+	}
+
 	private willBeCheckmate(piece: Piece, address: Address): boolean {
 		const tmpAddress = piece.address;
 		piece.setAddress(address);
@@ -144,7 +180,9 @@ export class Position {
 	}
 
 	private willBeTwoPawns(piece: Piece, address: Address): boolean {
-		return piece.kind === 'p' && this.pieces.some(val => val.address !== undefined && val.address.x === address.x && val.kind === 'p');
+		return piece.kind === 'p' && this.pieces.some(val => 
+			val.address !== undefined && val.address.x === address.x && val.kind === 'p'
+		);
 	}
 
 	private isValidMoveAddress(piece: Piece, address: Address): boolean {
@@ -155,49 +193,42 @@ export class Position {
 		this.side = this.side === PlayerSide.black ? PlayerSide.white : PlayerSide.black;
 	}
 
-	private endTurn(): void {
+	public endTurn(): void {
 		this.changePlayerSide();
 		// 手数をインクリメント
 		this.side === PlayerSide.black && this.turn++;
 	}
 
-	public move(pieceId: number, address: Address): void {
+	public willBePromotable(piece: Piece, address: Address): boolean {
+		return piece.address !== undefined &&
+			((piece.side == PlayerSide.black && piece.address.y <= 3) || (piece.side == PlayerSide.white && piece.address.y >= 7))
+	}
+
+	public move(pieceId: number, address: Address, willPromote: boolean = false): void {
 		const movingPiece = this.findPieceById(pieceId);
-	  if (movingPiece === undefined) {
+
+		if (movingPiece === undefined) {
 			throw new Error('Selected piece is not find.');
 		} else if (movingPiece.side !== this.side) {
 			throw new Error('Selected piece is not yours.');
 		} else if (!this.isValidMoveAddress(movingPiece, address)) {
 			throw new Error('The piece can not move to the square.');
+		} else if (willPromote && !this.willBePromotable(movingPiece, address)) {
+			throw new Error('The piece can not promote.');
 		}
 
-		// コマの移動先に相手のコマがある場合
-		const opponentPiece = this.findPieceByAddress(address);
-		if (opponentPiece) {
-			opponentPiece.taken();
+		// 盤上の駒を移動する場合
+		if (movingPiece.address !== undefined) {
+			// コマの移動先に相手のコマがある場合
+			const opponentPiece = this.findPieceByAddress(address);
+			if (opponentPiece) {
+				opponentPiece.taken();
+			}
 		}
-	
+
 		movingPiece.setAddress(address);
-		this.endTurn();
-	}
-
-	public drop(pieceId: number, address: Address): void {
-		const droppingPiece = this.findPieceById(pieceId);
-	  if (droppingPiece === undefined) {
-			throw new Error('Selected piece is not find.');
-		} else if (droppingPiece.side !== this.side) {
-			throw new Error('Selected piece is not yours.');
-		} else if (droppingPiece.address !== undefined) {
-			throw new Error('Selected piece is already on the board.');
-		} else if (this.findPieceByAddress(address)) {
-			throw new Error('A piece exists on the selected square.');
-		} else if (droppingPiece.kind === 'p' && this.willBeCheckmate(droppingPiece, address)) {
-			throw new Error('You can not checkmate by dropping a pawn.');
-		} else if (this.willBeTwoPawns(droppingPiece, address)) {
-			throw new Error('You can not place two powns on the same file.');
+		if (willPromote) {
+			movingPiece.promote();
 		}
-
-		droppingPiece.setAddress(address);
-		this.endTurn();
 	}
 }

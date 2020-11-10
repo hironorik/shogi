@@ -14,6 +14,7 @@ const renderBoardForConsole = (position: Piece[]) => {
     return piece.shortName;
   });
   console.log(whiteHoldPieceNames.join(', '));
+  console.log('|  9 |  8 |  7 |  6 |  5 |  4 |  3 |  2 |  1 |');
   console.log('----------------------------------------------');
 
   for (let y=1; y<=9; y++) {
@@ -28,7 +29,7 @@ const renderBoardForConsole = (position: Piece[]) => {
       }
       row = row + "|" + square;
     }
-    console.log(row + "|");
+    console.log(row + "| " + y);
   }
 
   console.log('----------------------------------------------');
@@ -60,7 +61,7 @@ const isValiedInputAddress = (input: string) => {
     'y': parseInt(inputs[1])
   };
 
-  return isAddressInsideBoard(address);
+  return (address.x === 0 && address.y >= 1 ) || isAddressInsideBoard(address);
 }
 
 const prompt = async(message: string) => {
@@ -121,7 +122,15 @@ const userSelectMovingPiece = async (position: Position) => {
 
   while (true) {
     let selectedAddress = await userInputAddress('Select your next move.');
-    piece = position.findPieceByAddress(selectedAddress);
+
+    // 持ち駒から出す場合
+    if (selectedAddress.x == 0) {
+      const handPieces = position.pieces.filter((piece: Piece) => piece.address === undefined && piece.side === position.side);
+      piece = handPieces[selectedAddress.y - 1];
+      console.log(piece);
+    } else {
+      piece = position.findPieceByAddress(selectedAddress);
+    }
 
     if (!piece) {
       console.log('There is no piece. Select an address where your piece is located.');
@@ -142,20 +151,22 @@ const userSelectMovingPiece = async (position: Position) => {
 
   while (true) {
     let piece = await userSelectMovingPiece(position) as Piece;
-    console.log(`Selected : ${(piece.address as Address).x}, ${(piece.address as Address).y}, ${piece.shortName}`);
+    console.log(`Selected : ${piece.id}, ${piece.shortName}`, piece.address);
 
     let moveToAddress = await userSelectMovingToAddress(piece, position);
-    position.move(piece.id, moveToAddress);
+    let willPromote = false;
+
+    position.move(piece.id, moveToAddress, willPromote);
     console.log(`${piece.shortName} moved to ${moveToAddress.x}, ${moveToAddress.y}`);
 
-
-    console.log(position.getWhiteKingPiece());
+    position.endTurn();
     renderBoardForConsole(position.pieces);
+
     if (position.canTakeKing() || position.isCheckmate()) {
       console.log(`Player ${position.side}, WIN!!!!`);
       break;
-    } else {
-      console.log(`Change player turn to ${position.side}.`);
     }
+
+    console.log(`Change player turn to ${position.side}.`);
   }
 })();
