@@ -64,6 +64,10 @@ const isValiedInputAddress = (input: string) => {
   return (address.x === 0 && address.y >= 1 ) || isAddressInsideBoard(address);
 }
 
+const isValiedInputYesNo = (input: string): boolean => {
+  return input === 'y' || input === 'n';
+}
+
 const prompt = async(message: string) => {
   console.log(message);
   const answer: any = await question('> ');
@@ -98,23 +102,14 @@ const userInputAddress = async (message: string) => {
   }
 }
 
-const userSelectMovingToAddress = async (piece: Piece, position: Position) => {
-  console.log('Following Addresses are movable.');
-  let movableAddresses = position.getPieceMovableAddresses(piece);
-  console.log(movableAddresses);
-  let selectedAddress: Address;
-
+const userInputYesNo = async (message: string) => {
   while (true) {
-    selectedAddress = await userInputAddress('Select an address where the piece move to.');
-
-    if (!movableAddresses.some(val => val.x === selectedAddress.x && val.y === selectedAddress.y)) {
-      console.log('The piece can not move to the address.');
-      continue;
+    const input = await prompt(`${message} Type 'y': YES, 'n': NO`);
+    if (isValiedInputYesNo(input)) {
+      return input === 'y';
     }
-    break;
+    console.log('Invalid answer you input. Try again.');
   }
-
-  return selectedAddress;
 }
 
 const userSelectMovingPiece = async (position: Position) => {
@@ -145,6 +140,34 @@ const userSelectMovingPiece = async (position: Position) => {
   return piece as Piece;
 }
 
+const userSelectMovingToAddress = async (piece: Piece, position: Position) => {
+  console.log('Following Addresses are movable.');
+  let movableAddresses = position.getPieceMovableAddresses(piece);
+  console.log(movableAddresses);
+  let selectedAddress: Address;
+
+  while (true) {
+    selectedAddress = await userInputAddress('Select an address where the piece move to.');
+
+    if (!movableAddresses.some(val => val.x === selectedAddress.x && val.y === selectedAddress.y)) {
+      console.log('The piece can not move to the address.');
+      continue;
+    }
+    break;
+  }
+
+  return selectedAddress;
+}
+
+const userSelectPromotion = async (piece: Piece, moveToAddress: Address, position: Position) => {
+  if (position.willNeedToPromote(piece, moveToAddress)) {
+    return true;
+  } else if (position.willBePromotable(piece, moveToAddress)) {
+    return await userInputYesNo(`Will promote the moving piece?`);
+  }
+  return false;
+}
+
 (async () => {
   let position = new Position();
   renderBoardForConsole(position.pieces);
@@ -154,12 +177,11 @@ const userSelectMovingPiece = async (position: Position) => {
     console.log(`Selected : ${piece.id}, ${piece.shortName}`, piece.address);
 
     let moveToAddress = await userSelectMovingToAddress(piece, position);
-    let willPromote = false;
+    let willPromote = await userSelectPromotion(piece, moveToAddress, position);;
 
     position.move(piece.id, moveToAddress, willPromote);
     console.log(`${piece.shortName} moved to ${moveToAddress.x}, ${moveToAddress.y}`);
 
-    position.endTurn();
     renderBoardForConsole(position.pieces);
 
     if (position.canTakeKing() || position.isCheckmate()) {

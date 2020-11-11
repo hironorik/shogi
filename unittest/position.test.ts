@@ -160,3 +160,42 @@ test('lance can take pawn.', () => {
 	expect((blackLance as Piece).address).toEqual({x: 1, y: 5});
   expect((blackPawon as Piece).side).toBe(PlayerSide.black);
 });
+
+test('lance must promote.', () => {
+  const position = new Position();
+  const moves = [
+		{from: {x: 1, y: 7}, to: {x: 1, y: 6}},
+		{from: {x: 1, y: 3}, to: {x: 1, y: 4}},
+		{from: {x: 1, y: 6}, to: {x: 1, y: 5}},
+		{from: {x: 1, y: 4}, to: {x: 1, y: 5}},
+		{from: {x: 1, y: 9}, to: {x: 1, y: 5}},
+		{from: {x: 1, y: 1}, to: {x: 1, y: 5}},
+		{from: {x: 9, y: 7}, to: {x: 9, y: 6}},
+	];
+	/*
+	|  9 |  8 |  7 |  6 |  5 |  4 |  3 |  2 |  1 |
+	----------------------------------------------
+	|w香 |w桂  |w銀 |w金 |w王  |w金 |w銀 |w桂  |    | 1
+	|    |w飛 |    |    |    |    |    |w角  |    | 2
+	|w歩 |w歩  |w歩 |w歩 |w歩  |w歩 |w歩  |w歩 |    | 3
+	|    |    |    |    |    |    |    |    |    | 4
+	|    |    |    |    |    |    |    |    |w香  | 5
+	|b歩 |    |    |    |    |    |    |     |    | 6
+	|    |b歩  |b歩 |b歩 |b歩  |b歩 |b歩 |b歩  |    | 7
+	|    |b角 |    |    |    |    |    |b飛  |    | 8
+	|b香 |b桂  |b銀 |b金 |b王  |b金 |b銀 |b桂  |    | 9
+	----------------------------------------------
+	*/
+
+	moves.forEach((move) => {
+		let piece = position.findPieceByAddress(move.from) as Piece;
+		position.move(piece.id, move.to);
+	});
+
+	const whiteLance = position['findPieceByAddress']({x: 1, y: 5}) as Piece;  // white が最後に動かした香車
+	expect(position.willNeedToPromote(whiteLance, {x: 1, y: 9})).toBe(true);
+	position.move(whiteLance.id, {x: 1, y: 9}, position.willNeedToPromote(whiteLance, {x: 1, y: 9}));
+
+	expect((whiteLance as Piece).address).toEqual({x: 1, y: 9});
+  expect((whiteLance as Piece).isPromoted).toBe(true);
+});

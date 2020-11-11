@@ -44,7 +44,9 @@ export class Piece {
 	}
 
 	promote() {
-		this.isPromoted = true;
+		if (this.isPromotable) {
+			this.isPromoted = true;
+		}
 	}
 
 	get shortName(): string {
@@ -57,6 +59,10 @@ export class Piece {
 
 	get moves(): MoveAddress[] {
 		return this.isPromoted ? this.move.promoted as MoveAddress[] : this.move.normal;
+	}
+
+	get isPromotable(): boolean {
+		return this.move.promoted !== undefined;
 	}
 
 	public setAddress(address: Address | undefined): void {

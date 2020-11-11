@@ -74,7 +74,7 @@ export class Position {
 		if (piece.address === undefined) {
 			const emptyAddresses = this.getEmptyAddresses();
 			movableAddress = emptyAddresses.filter((address: Address) => {
-				return this.WillPieceBeMovable(piece, address) && 
+				return this.willPieceBeMovable(piece, address) && 
 					!(piece.kind === 'p' && this.willBeCheckmate(piece, address)) &&
 					!this.willBeTwoPawns(piece, address);
 			});
@@ -160,7 +160,7 @@ export class Position {
 		});
 	}
 
-	private WillPieceBeMovable(piece: Piece, address: Address): boolean {
+	private willPieceBeMovable(piece: Piece, address: Address): boolean {
 		const tmpAddress = piece.address;
 		piece.setAddress(address);
 		const tmpMovableAddresses = this.getPieceMovableAddresses(piece);
@@ -200,21 +200,27 @@ export class Position {
 	}
 
 	public willBePromotable(piece: Piece, address: Address): boolean {
-		return piece.address !== undefined &&
-			((piece.side == PlayerSide.black && piece.address.y <= 3) || (piece.side == PlayerSide.white && piece.address.y >= 7))
+		return piece.isPromotable &&
+			!piece.isPromoted &&
+			piece.address !== undefined &&
+			((piece.side === PlayerSide.black && address.y <= 3) || (piece.side === PlayerSide.white && address.y >= 7))
+	}
+
+	public willNeedToPromote(piece: Piece, address: Address): boolean {
+		return this.willBePromotable(piece, address) && !this.willPieceBeMovable(piece, address);
 	}
 
 	public move(pieceId: number, address: Address, willPromote: boolean = false): void {
 		const movingPiece = this.findPieceById(pieceId);
 
 		if (movingPiece === undefined) {
-			throw new Error('Selected piece is not find.');
+			throw new Error(`Selected piece is not find. Game Player Side: ${this.side}, Trun: ${this.turn}`);
 		} else if (movingPiece.side !== this.side) {
-			throw new Error('Selected piece is not yours.');
+			throw new Error(`Selected piece '${movingPiece.fullName}' is not yours. Game Player Side: ${this.side}, Trun: ${this.turn}`);
 		} else if (!this.isValidMoveAddress(movingPiece, address)) {
-			throw new Error('The piece can not move to the square.');
+			throw new Error(`The piece '${movingPiece.fullName}' can not move to the square (${address.x}, ${address.y}). Game Player Side: ${this.side}, Trun: ${this.turn}`);
 		} else if (willPromote && !this.willBePromotable(movingPiece, address)) {
-			throw new Error('The piece can not promote.');
+			throw new Error(`The piece can not promote. Game Player Side: ${this.side}, Trun: ${this.turn}`);
 		}
 
 		// 盤上の駒を移動する場合
@@ -230,5 +236,7 @@ export class Position {
 		if (willPromote) {
 			movingPiece.promote();
 		}
+
+		this.endTurn();
 	}
 }
